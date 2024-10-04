@@ -16,3 +16,8 @@ CREATE TABLE tblUsuarios (
 
 -- Descreve a tabela
 DESCRIBE tblUsuarios;
+
+ALTER TABLE tblUsuarios ADD COLUMN endereco VARCHAR(50) NOT NULL;
+	
+select * from tblusuarios;
+describe tblusuarios;

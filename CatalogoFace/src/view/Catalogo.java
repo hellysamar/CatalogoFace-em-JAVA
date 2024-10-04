@@ -13,13 +13,18 @@ import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.text.DateFormat;
 import java.util.Date;
 
 import javax.imageio.ImageIO;
+import javax.swing.Icon;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -41,6 +46,7 @@ public class Catalogo extends JFrame {
 	DAO dao = new DAO();
 	private Connection conn;
 	private PreparedStatement pst;
+	private ResultSet rs;
 	
 	// INSTANCIAR OBJETOS PARA OFLUXO DE BYTES
 	private FileInputStream fis;
@@ -118,7 +124,7 @@ public class Catalogo extends JFrame {
 		lblRegistro.setBackground(new Color(240, 240, 240));
 		lblRegistro.setForeground(new Color(128, 128, 255));
 		lblRegistro.setFont(new Font("Tahoma", Font.BOLD, 14));
-		lblRegistro.setBounds(10, 11, 176, 17);
+		lblRegistro.setBounds(10, 26, 144, 17);
 		btnPesquisar.add(lblRegistro);
 		
 		txtRegistro = new JTextField();
@@ -133,7 +139,7 @@ public class Catalogo extends JFrame {
 				}
 			}
 		});
-		txtRegistro.setBounds(10, 37, 144, 20);
+		txtRegistro.setBounds(165, 26, 134, 20);
 		btnPesquisar.add(txtRegistro);
 		txtRegistro.setColumns(10);
 		txtRegistro.setDocument(new Validador(6));
@@ -151,13 +157,6 @@ public class Catalogo extends JFrame {
 		btnPesquisar.add(txtNome);
 		txtNome.setColumns(10);
 		txtNome.setDocument(new Validador(30));
-		
-		JButton btnNewButton = new JButton("Pesquisar");
-		btnNewButton.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		btnNewButton.setFont(new Font("Tahoma", Font.BOLD, 11));
-		btnNewButton.setForeground(new Color(128, 128, 255));
-		btnNewButton.setBounds(310, 92, 90, 23);
-		btnPesquisar.add(btnNewButton);
 		
 		JButton btnCarregarFoto = new JButton("Carregar foto");
 		btnCarregarFoto.addActionListener(new ActionListener() {
@@ -197,10 +196,17 @@ public class Catalogo extends JFrame {
 		btnDeletar.setBounds(210, 192, 90, 90);
 		btnPesquisar.add(btnDeletar);
 		
-		JButton btnNewButton_2 = new JButton("New button");
-		btnNewButton_2.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		btnNewButton_2.setBounds(310, 192, 90, 90);
-		btnPesquisar.add(btnNewButton_2);
+		JButton btnLimpar = new JButton("");
+		btnLimpar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				resetCampos();
+			}
+		});
+		btnLimpar.setToolTipText("Limpar campos");
+		btnLimpar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF change.png")));
+		btnLimpar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		btnLimpar.setBounds(310, 192, 90, 90);
+		btnPesquisar.add(btnLimpar);
 		
 		txtEndereco = new JTextField();
 		txtEndereco.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
@@ -221,6 +227,17 @@ public class Catalogo extends JFrame {
 		lblFoto.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF photo.png")));
 		lblFoto.setBounds(410, 11, 229, 242);
 		btnPesquisar.add(lblFoto);
+		
+		JButton btnNewButton_1 = new JButton("");
+		btnNewButton_1.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				buscarRegistro();
+			}
+		});
+		btnNewButton_1.setToolTipText("Pesquisar");
+		btnNewButton_1.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF search.png")));
+		btnNewButton_1.setBounds(310, 23, 90, 90);
+		btnPesquisar.add(btnNewButton_1);
 	}
 	
 	// Método para verificar o Status de conexão
@@ -271,26 +288,90 @@ public class Catalogo extends JFrame {
 	}
 	
 	private void adicionar() {
-		String inserir = "INSERT INTO tblUsuarios (nome, foto, endereco) VALUES (?, ?, ?)"; // CREATE do CRUD
-		
-		try {
-			conn = dao.conectar();
-			pst = conn.prepareStatement(inserir);
-			pst.setString(1, txtNome.getText());
-			pst.setBlob(2, fis, tamanho);
-			pst.setString(3, txtEndereco.getText());
+		if (txtNome.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o campo Nome!");
+			txtNome.requestFocus();
 			
-			int confirma = pst.executeUpdate();
+		} else if (txtEndereco.getText().isEmpty()) {
+			JOptionPane.showInternalMessageDialog(null, "Preencha o campo Endereço!");
+			txtEndereco.requestFocus();
+//		} else if () {
 			
-			if (confirma == 1) {
-				JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");
-			} else {
-				JOptionPane.showMessageDialog(null, "Erro! Usuário não cadastrado!");
+		} else {
+			
+			String inserir = "INSERT INTO tblUsuarios (nome, foto, endereco) VALUES (?, ?, ?)"; // CREATE do CRUD
+			
+			try {
+				conn = dao.conectar();
+				pst = conn.prepareStatement(inserir);
+				pst.setString(1, txtNome.getText());
+				pst.setBlob(2, fis, tamanho);
+				pst.setString(3, txtEndereco.getText());
+				
+				int confirma = pst.executeUpdate();
+				
+				if (confirma == 1) {
+					JOptionPane.showMessageDialog(null, "Usuário cadastrado com sucesso!");
+					resetCampos();
+					
+				} else {
+					JOptionPane.showMessageDialog(null, "Erro! Usuário não cadastrado!");
+				}
+				
+				conn.close();
+				
+			} catch (Exception e) {
+				System.out.println(e);
 			}
-			
-			conn.close();
-		} catch (Exception e) {
-			System.out.println(e);
 		}
+	}
+	
+	private void buscarRegistro() {		
+		if (txtRegistro.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o campo Registro para buscar");
+			txtRegistro.requestFocus();
+		} else {
+			String buscarR = "SELECT * FROM tblUsuarios WHERE registro = ?";
+			
+			try {
+				conn = dao.conectar();
+				pst = conn.prepareStatement(buscarR);
+				pst.setString(1, txtRegistro.getText());
+				rs = pst.executeQuery();
+				if (rs.next()) {
+					txtNome.setText(rs.getString(2));
+					txtEndereco.setText(rs.getString(4));
+					
+					Blob blob = (Blob) rs.getBlob(3);
+					byte[] img = blob.getBytes(1, (int) blob.length());
+					BufferedImage imagem = null;
+					try {
+						imagem = ImageIO.read(new ByteArrayInputStream(img));
+					} catch (Exception e) {
+						System.out.println(e);
+					}
+					ImageIcon icone = new ImageIcon(imagem);
+					Icon foto = new ImageIcon(icone.getImage().getScaledInstance(lblFoto.getWidth(), lblFoto.getHeight(), Image.SCALE_SMOOTH));
+					
+					lblFoto.setIcon(foto);
+				} else {
+					JOptionPane.showMessageDialog(null, "Usuário não encontrado!");
+					resetCampos();
+				}
+				conn.close();
+			} catch (Exception e) {
+				System.out.println(e);
+			}
+
+		}
+		
+	}
+	
+	private void resetCampos() {
+		txtRegistro.setText(null);
+		txtNome.setText(null);
+		txtEndereco.setText(null);
+		lblFoto.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF photo.png")));
+		txtNome.requestFocus();
 	}
 }
