@@ -92,6 +92,7 @@ public class Catalogo extends JFrame {
 	 * Create the frame.
 	 */
 	public Catalogo() {
+		setResizable(false);
 		addWindowListener(new WindowAdapter() {
 			@Override
 			public void windowActivated(WindowEvent e) {
@@ -196,6 +197,12 @@ public class Catalogo extends JFrame {
 		pnl.add(btnAdicionar);
 		
 		JButton btnEditar = new JButton("");
+		btnEditar.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				editar();
+			}
+		});
 		btnEditar.setToolTipText("Editar");
 		btnEditar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnEditar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF edit.png")));
@@ -355,6 +362,28 @@ public class Catalogo extends JFrame {
 		}
 	}
 	
+	private void editar() {
+		String sqlUpdate = "UPDATE tblUsuarios SET nome = ?, foto = ?, endereco = ? WHERE registro = ?";
+		
+		try {
+			conn = dao.conectar();
+			pst = conn.prepareStatement(sqlUpdate);
+			pst.setString(1, txtNome.getText());
+			pst.setBlob(2, fis, tamanho);
+			pst.setString(3, txtEndereco.getText());
+			pst.setString(4, txtRegistro.getText());
+			
+			int editou = pst.executeUpdate();
+			
+			if (editou == 1) {
+				JOptionPane.showInternalMessageDialog(null, "Edição realizada com sucesso!");
+			} else {
+				JOptionPane.showInternalMessageDialog(null, "Edição não realizada!");
+			}
+		} catch (Exception e) {
+			System.out.println("ocorreu uma excessão ao tentar editar o usuário");
+		}
+	}
 	private void listarNomesBanco() {
 		// criando um vetor dinamico
 		DefaultListModel<String> modelo = new DefaultListModel<>();

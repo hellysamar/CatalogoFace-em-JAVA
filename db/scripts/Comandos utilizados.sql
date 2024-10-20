@@ -21,3 +21,5 @@ ALTER TABLE tblUsuarios ADD COLUMN endereco VARCHAR(50) NOT NULL;
 	
 select * from tblusuarios;
 describe tblusuarios;
+
+SELECT * FROM tblusuarios WHERE nome LIKE '%sa%' ORDER BY nome LIMIT 1;
