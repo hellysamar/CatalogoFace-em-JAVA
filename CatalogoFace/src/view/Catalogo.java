@@ -59,6 +59,9 @@ public class Catalogo extends JFrame {
 	// VARIÁVEL GLOBAL PARA ARMAZENAR O TAMANHO DA IMAGEM(Bytes)
 	private int tamanho;
 	
+	// VARIAVEL PARA SABER SE A FOTO FOI ALTERADA OU NÃO
+	private boolean fotoCarregada = false;
+	
 
 	private static final long serialVersionUID = 1L;
 	private JPanel pnl;
@@ -71,6 +74,12 @@ public class Catalogo extends JFrame {
 	private JLabel lblFoto;
 	private JList listaNomes;
 	private JScrollPane scrollPaneNomes;
+	private JButton btnPesquisar;
+	private JButton btnCarregarFoto;
+	private JButton btnAdicionar;
+	private JButton btnEditar;
+	private JButton btnDeletar;
+	private JButton btnLimpar;
 
 	/**
 	 * Launch the application.
@@ -105,6 +114,12 @@ public class Catalogo extends JFrame {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 681, 392);
 		pnl = new JPanel();
+		pnl.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseClicked(MouseEvent e) {
+				scrollPaneNomes.setVisible(false);
+			}
+		});
 		pnl.setBackground(new Color(240, 240, 240));
 		pnl.setBorder(new EmptyBorder(5, 5, 5, 5));
 
@@ -165,6 +180,24 @@ public class Catalogo extends JFrame {
 			public void keyReleased(KeyEvent e) {
 				listarNomesBanco();
 			}
+			@Override
+			public void keyPressed(KeyEvent e) {
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					scrollPaneNomes.setVisible(false);
+					
+					int confirma = JOptionPane.showConfirmDialog(null, "Usuário não Cadastrado! \nDeseja cadastrar o usuário " + txtNome.getText() + "?", "Aviso", JOptionPane.YES_NO_OPTION);
+					if (confirma == JOptionPane.YES_OPTION) {
+						txtRegistro.setText(null);
+						txtRegistro.setEditable(false);
+						btnPesquisar.setEnabled(false);
+						txtEndereco.setText(null);
+						btnAdicionar.setEnabled(true);
+						btnCarregarFoto.setEnabled(true);
+					} else {
+						resetCampos();
+					}
+				}
+			}
 		});
 		txtNome.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		txtNome.setBounds(10, 93, 289, 20);
@@ -172,7 +205,8 @@ public class Catalogo extends JFrame {
 		txtNome.setColumns(10);
 		txtNome.setDocument(new Validador(30));
 		
-		JButton btnCarregarFoto = new JButton("Carregar foto");
+		btnCarregarFoto = new JButton("Carregar foto");
+		btnCarregarFoto.setEnabled(false);
 		btnCarregarFoto.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				carregarFoto();
@@ -184,7 +218,8 @@ public class Catalogo extends JFrame {
 		btnCarregarFoto.setBounds(479, 259, 115, 23);
 		pnl.add(btnCarregarFoto);
 		
-		JButton btnAdicionar = new JButton("");
+		btnAdicionar = new JButton("");
+		btnAdicionar.setEnabled(false);
 		btnAdicionar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				adicionar();
@@ -196,7 +231,8 @@ public class Catalogo extends JFrame {
 		btnAdicionar.setBounds(10, 192, 90, 90);
 		pnl.add(btnAdicionar);
 		
-		JButton btnEditar = new JButton("");
+		btnEditar = new JButton("");
+		btnEditar.setEnabled(false);
 		btnEditar.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -209,14 +245,20 @@ public class Catalogo extends JFrame {
 		btnEditar.setBounds(110, 192, 90, 90);
 		pnl.add(btnEditar);
 		
-		JButton btnDeletar = new JButton("");
+		btnDeletar = new JButton("");
+		btnDeletar.setEnabled(false);
+		btnDeletar.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				excluir();
+			}
+		});
 		btnDeletar.setToolTipText("Deletar");
 		btnDeletar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnDeletar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF delete.png")));
 		btnDeletar.setBounds(210, 192, 90, 90);
 		pnl.add(btnDeletar);
 		
-		JButton btnLimpar = new JButton("");
+		btnLimpar = new JButton("");
 		btnLimpar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				resetCampos();
@@ -238,7 +280,7 @@ public class Catalogo extends JFrame {
 		listaNomes.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-				listarNomeBanco();
+				preencherPorNomeBanco();
 			}
 		});
 		listaNomes.setBorder(null);
@@ -264,10 +306,10 @@ public class Catalogo extends JFrame {
 		lblFoto.setBounds(410, 11, 229, 242);
 		pnl.add(lblFoto);
 		
-		JButton btnPesquisar = new JButton("");
+		btnPesquisar = new JButton("");
 		btnPesquisar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				buscarRegistro();
+				preencherPorRegistro();
 			}
 		});
 		
@@ -317,6 +359,8 @@ public class Catalogo extends JFrame {
 				 Image foto = ImageIO.read(jfc.getSelectedFile()).getScaledInstance(lblFoto.getWidth(), lblFoto.getHeight(), Image.SCALE_SMOOTH);
 				 lblFoto.setIcon(new ImageIcon(foto));
 				 lblFoto.updateUI();
+				 
+				 fotoCarregada = true;
 			} catch (Exception e) {
 				System.out.println(e);
 			}
@@ -331,8 +375,8 @@ public class Catalogo extends JFrame {
 		} else if (txtEndereco.getText().isEmpty()) {
 			JOptionPane.showInternalMessageDialog(null, "Preencha o campo Endereço!");
 			txtEndereco.requestFocus();
-//		} else if () {
-			
+		} else if (tamanho == 0) {
+			JOptionPane.showMessageDialog(null, "Selecione uma foto!");
 		} else {
 			
 			String inserir = "INSERT INTO tblUsuarios (nome, foto, endereco) VALUES (?, ?, ?)"; // CREATE do CRUD
@@ -363,27 +407,79 @@ public class Catalogo extends JFrame {
 	}
 	
 	private void editar() {
-		String sqlUpdate = "UPDATE tblUsuarios SET nome = ?, foto = ?, endereco = ? WHERE registro = ?";
+		String sqlUpdate = "";
 		
-		try {
-			conn = dao.conectar();
-			pst = conn.prepareStatement(sqlUpdate);
-			pst.setString(1, txtNome.getText());
-			pst.setBlob(2, fis, tamanho);
-			pst.setString(3, txtEndereco.getText());
-			pst.setString(4, txtRegistro.getText());
-			
-			int editou = pst.executeUpdate();
-			
-			if (editou == 1) {
-				JOptionPane.showInternalMessageDialog(null, "Edição realizada com sucesso!");
-			} else {
-				JOptionPane.showInternalMessageDialog(null, "Edição não realizada!");
+		if (fotoCarregada) {
+			sqlUpdate = "UPDATE tblUsuarios SET nome = ?, foto = ?, endereco = ? WHERE registro = ?";
+		} else {
+			sqlUpdate = "UPDATE tblUsuarios SET nome = ?, endereco = ? WHERE registro = ?";
+		}
+		
+		if (txtNome.getText().isEmpty()) {
+			JOptionPane.showMessageDialog(null, "Preencha o campo Nome!");
+			txtNome.requestFocus();			
+		} else if (txtEndereco.getText().isEmpty()) {
+			JOptionPane.showInternalMessageDialog(null, "Preencha o campo Endereço!");
+			txtEndereco.requestFocus();
+		} else {
+			try {
+				conn = dao.conectar();
+				pst = conn.prepareStatement(sqlUpdate);
+				if (fotoCarregada) {
+					pst.setString(1, txtNome.getText());
+					pst.setBlob(2, fis, tamanho);
+					pst.setString(3, txtEndereco.getText());
+					pst.setString(4, txtRegistro.getText());
+				} else {
+					pst.setString(1, txtNome.getText());
+					pst.setString(2, txtEndereco.getText());
+					pst.setString(3, txtRegistro.getText());
+				}
+							
+				int editou = pst.executeUpdate();
+				
+				if (editou == 1) {
+					JOptionPane.showInternalMessageDialog(null, "Edição realizada com sucesso!");
+					fotoCarregada = false;
+				} else {
+					JOptionPane.showInternalMessageDialog(null, "Edição não realizada!");
+				}
+				
+				conn.close();
+				
+			} catch (Exception e) {
+				System.out.println("ocorreu uma excessão ao tentar editar o usuário");
 			}
-		} catch (Exception e) {
-			System.out.println("ocorreu uma excessão ao tentar editar o usuário");
 		}
 	}
+	
+	private void excluir() {
+		String sqlExcluir = "DELETE FROM tblUsuarios WHERE registro = ?";
+		
+		int confirmaExcluir = JOptionPane.showConfirmDialog(null, "Confirma a Exclusão?", "Atenção", JOptionPane.YES_NO_OPTION);
+		
+		if (confirmaExcluir == 0) { // ou (confirmaExcluir == JOptionPane.YES_OPTION)
+//			EXCLUIR
+			try {
+				conn = dao.conectar();
+				pst = conn.prepareStatement(sqlExcluir);
+				pst.setString(1, txtRegistro.getText());
+				int excluiu = pst.executeUpdate();
+				
+				if (excluiu == 1) {
+					JOptionPane.showMessageDialog(null, "Usuário excluido com sucesso!");
+					resetCampos();
+				}
+				conn.close();
+				
+			} catch (Exception e) {
+				System.out.println("Erro ao tentar excluir usuário!");
+			}
+		} else {
+			
+		}
+	}
+	
 	private void listarNomesBanco() {
 		// criando um vetor dinamico
 		DefaultListModel<String> modelo = new DefaultListModel<>();
@@ -411,7 +507,7 @@ public class Catalogo extends JFrame {
 //		scrollPaneNomes.setVisible(true);
 	}
 	
-	private void listarNomeBanco() {
+	private void preencherPorNomeBanco() {
 		int linha = listaNomes.getSelectedIndex();
 		if (linha >= 0) {
 			String sql = "SELECT * FROM tblUsuarios WHERE nome LIKE '" + txtNome.getText() + "%' ORDER BY nome LIMIT " + (linha) + ", 1";
@@ -441,6 +537,11 @@ public class Catalogo extends JFrame {
 					Icon foto = new ImageIcon(icone.getImage().getScaledInstance(lblFoto.getWidth(), lblFoto.getHeight(), Image.SCALE_SMOOTH));
 					
 					lblFoto.setIcon(foto);
+					
+					txtRegistro.setEditable(false);
+					btnEditar.setEnabled(true);
+					btnDeletar.setEnabled(true);
+					btnCarregarFoto.setEnabled(true);
 				}
 			} catch (Exception e) {
 				 System.out.println(e);
@@ -450,7 +551,7 @@ public class Catalogo extends JFrame {
 		}
 	}
 	
-	private void buscarRegistro() {		
+	private void preencherPorRegistro() {
 		if (txtRegistro.getText().isEmpty()) {
 			JOptionPane.showMessageDialog(null, "Preencha o campo Registro para buscar");
 			txtRegistro.requestFocus();
@@ -478,9 +579,26 @@ public class Catalogo extends JFrame {
 					Icon foto = new ImageIcon(icone.getImage().getScaledInstance(lblFoto.getWidth(), lblFoto.getHeight(), Image.SCALE_SMOOTH));
 					
 					lblFoto.setIcon(foto);
+					
+					txtRegistro.setEditable(false);
+					btnCarregarFoto.setEnabled(true);
+					btnEditar.setEnabled(true);
+					btnDeletar.setEnabled(true);
+			
 				} else {
-					JOptionPane.showMessageDialog(null, "Usuário não encontrado!");
-					resetCampos();
+					int confirma = JOptionPane.showConfirmDialog(null, "Usuário não encontrado! \nDeseja iniciar novo Cadastro?", "Aviso", JOptionPane.YES_NO_OPTION);
+					if (confirma == JOptionPane.YES_OPTION) {
+						txtRegistro.setText(null);
+						txtRegistro.setEditable(false);
+						btnPesquisar.setEnabled(false);
+						txtNome.setText(null);
+						txtEndereco.setText(null);
+						txtNome.requestFocus();
+						btnAdicionar.setEnabled(true);
+						btnCarregarFoto.setEnabled(true);
+					} else {
+						resetCampos();
+					}
 				}
 				conn.close();
 			} catch (Exception e) {
@@ -498,5 +616,12 @@ public class Catalogo extends JFrame {
 		lblFoto.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF photo.png")));
 		txtNome.requestFocus();
 		scrollPaneNomes.setVisible(false);
+		fotoCarregada = false;
+		tamanho = 0;
+						
+		txtRegistro.setEditable(true);
+		btnPesquisar.setEnabled(true);
+		btnAdicionar.setEnabled(false);
+		btnCarregarFoto.setEnabled(false);
 	}
 }
