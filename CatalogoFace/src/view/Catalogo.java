@@ -2,6 +2,7 @@ package view;
 
 import java.awt.Color;
 import java.awt.Component;
+import java.awt.Desktop;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Image;
@@ -11,11 +12,15 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -40,10 +45,14 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.border.TitledBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
+import com.itextpdf.text.Document;
+import com.itextpdf.text.Paragraph;
+import com.itextpdf.text.pdf.PdfPCell;
+import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfWriter;
+
 import model.DAO;
 import utils.Validador;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
 
 public class Catalogo extends JFrame {
 
@@ -80,6 +89,7 @@ public class Catalogo extends JFrame {
 	private JButton btnEditar;
 	private JButton btnDeletar;
 	private JButton btnLimpar;
+	private JButton btnGerarPdf;
 
 	/**
 	 * Launch the application.
@@ -295,7 +305,7 @@ public class Catalogo extends JFrame {
 		
 		txtEndereco = new JTextField();
 		txtEndereco.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		txtEndereco.setBounds(10, 149, 390, 20);
+		txtEndereco.setBounds(10, 149, 289, 20);
 		pnl.add(txtEndereco);
 		txtEndereco.setColumns(10);
 		txtEndereco.setDocument(new Validador(30));
@@ -307,6 +317,7 @@ public class Catalogo extends JFrame {
 		pnl.add(lblFoto);
 		
 		btnPesquisar = new JButton("");
+		btnPesquisar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnPesquisar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				preencherPorRegistro();
@@ -315,8 +326,27 @@ public class Catalogo extends JFrame {
 		
 		btnPesquisar.setToolTipText("Pesquisar");
 		btnPesquisar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF search.png")));
-		btnPesquisar.setBounds(310, 23, 90, 90);
+		btnPesquisar.setBounds(310, 23, 90, 70);
 		pnl.add(btnPesquisar);
+		
+		btnGerarPdf = new JButton("PDF");
+		btnGerarPdf.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		btnGerarPdf.setForeground(new Color(128, 128, 255));
+		btnGerarPdf.setToolTipText("Gerar pdf");
+		btnGerarPdf.setFont(new Font("Tahoma", Font.BOLD, 28));
+		btnGerarPdf.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				gerarPdf();
+			}
+		});
+		btnGerarPdf.setBounds(310, 111, 90, 70);
+		pnl.add(btnGerarPdf);
+		
+		JLabel lblNewLabel = new JLabel("*tecle Enter, se nome não cadastrado");
+		lblNewLabel.setFont(new Font("Tahoma", Font.PLAIN, 10));
+		lblNewLabel.setForeground(new Color(255, 0, 0));
+		lblNewLabel.setBounds(59, 69, 232, 14);
+		pnl.add(lblNewLabel);
 	}
 	
 	// Método para verificar o Status de conexão
@@ -542,6 +572,7 @@ public class Catalogo extends JFrame {
 					btnEditar.setEnabled(true);
 					btnDeletar.setEnabled(true);
 					btnCarregarFoto.setEnabled(true);
+					btnGerarPdf.setEnabled(false);
 				}
 			} catch (Exception e) {
 				 System.out.println(e);
@@ -584,6 +615,7 @@ public class Catalogo extends JFrame {
 					btnCarregarFoto.setEnabled(true);
 					btnEditar.setEnabled(true);
 					btnDeletar.setEnabled(true);
+					btnGerarPdf.setEnabled(false);
 			
 				} else {
 					int confirma = JOptionPane.showConfirmDialog(null, "Usuário não encontrado! \nDeseja iniciar novo Cadastro?", "Aviso", JOptionPane.YES_NO_OPTION);
@@ -609,6 +641,68 @@ public class Catalogo extends JFrame {
 		
 	}
 	
+	private void gerarPdf() {
+		Document document = new Document(); // importante importar o com.itextpdf.text.Document;
+		
+		//gerar o documento PDF
+		try {
+			PdfWriter.getInstance(document, new FileOutputStream("Catalogo.pdf")); // gera o título do documento PDF
+			document.open(); // abre o documento para que seja incluido o conteudo do PDF (paragrafos, fotos, etc..)
+			Date data = new Date();
+			DateFormat formatador = DateFormat.getDateInstance(DateFormat.FULL);
+			document.add(new Paragraph(formatador.format(data)));
+			document.add(new Paragraph("Listagem de Usuários:"));			
+			document.add(new Paragraph(" "));
+			
+			//Criando tabela para alocar dados do Banco
+			PdfPTable tabela = new PdfPTable(4);
+			PdfPCell col1 = new PdfPCell(new Paragraph("Registro"));
+			tabela.addCell(col1);
+			PdfPCell col2 = new PdfPCell(new Paragraph("Nome"));
+			tabela.addCell(col2);
+			PdfPCell col3 = new PdfPCell(new Paragraph("Endereço"));
+			tabela.addCell(col3);
+			PdfPCell col4 = new PdfPCell(new Paragraph("Fotos"));
+			tabela.addCell(col4);
+			
+			String sqlConteudoPdf = "SELECT * FROM tblUsuarios ORDER BY nome";
+			
+			try {
+				conn = dao.conectar();
+				pst = conn.prepareStatement(sqlConteudoPdf);
+				rs = pst.executeQuery();
+				
+				while (rs.next()) {
+					tabela.addCell(rs.getString(1));
+					tabela.addCell(rs.getString(2));
+					tabela.addCell(rs.getString(4));
+					
+					Blob blob = (Blob) rs.getBlob(3);
+					byte[] img = blob.getBytes(1, (int) blob.length());
+					com.itextpdf.text.Image imagemBanco = com.itextpdf.text.Image.getInstance(img);
+					tabela.addCell(imagemBanco);
+				}
+				conn.close();
+			} catch (Exception ePDF) {
+				System.out.println(ePDF);
+			}
+			
+			document.add(tabela);
+			
+		} catch (Exception e) {
+			System.out.println(e);
+		} finally {
+			// Muito importante fechar o documento após gerado o pdf
+			document.close();
+		}
+			// abrir o documento pdf no Leitor padrão do Sistema
+		try {
+			Desktop.getDesktop().open(new File("Catalogo.pdf")); // deve ser o nome do arquivo pdf gerado
+		} catch (Exception e2) {
+			System.out.println(e2);
+		}
+	}
+
 	private void resetCampos() {
 		txtRegistro.setText(null);
 		txtNome.setText(null);
@@ -622,6 +716,9 @@ public class Catalogo extends JFrame {
 		txtRegistro.setEditable(true);
 		btnPesquisar.setEnabled(true);
 		btnAdicionar.setEnabled(false);
+		btnEditar.setEnabled(false);
+		btnDeletar.setEnabled(false);
 		btnCarregarFoto.setEnabled(false);
+		btnGerarPdf.setEnabled(true);
 	}
 }
