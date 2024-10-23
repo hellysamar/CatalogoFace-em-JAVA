@@ -56,19 +56,12 @@ import utils.Validador;
 
 public class Catalogo extends JFrame {
 
-	// INSTANCIANDO OBJETOS JDBC
 	DAO dao = new DAO();
 	private Connection conn;
 	private PreparedStatement pst;
 	private ResultSet rs;
-	
-	// INSTANCIAR OBJETOS PARA OFLUXO DE BYTES
 	private FileInputStream fis;
-	
-	// VARIÁVEL GLOBAL PARA ARMAZENAR O TAMANHO DA IMAGEM(Bytes)
 	private int tamanho;
-	
-	// VARIAVEL PARA SABER SE A FOTO FOI ALTERADA OU NÃO
 	private boolean fotoCarregada = false;
 	
 
@@ -81,7 +74,7 @@ public class Catalogo extends JFrame {
 	private JTextField txtNome;
 	private JTextField txtEndereco;
 	private JLabel lblFoto;
-	private JList listaNomes;
+	private JList<String> listaNomes;
 	private JScrollPane scrollPaneNomes;
 	private JButton btnPesquisar;
 	private JButton btnCarregarFoto;
@@ -90,6 +83,7 @@ public class Catalogo extends JFrame {
 	private JButton btnDeletar;
 	private JButton btnLimpar;
 	private JButton btnGerarPdf;
+	private JButton btnSobre;
 
 	/**
 	 * Launch the application.
@@ -122,7 +116,7 @@ public class Catalogo extends JFrame {
 		setTitle("Catálogo");
 		setIconImage(Toolkit.getDefaultToolkit().getImage(Catalogo.class.getResource("/icons/CF.png")));
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 681, 392);
+		setBounds(100, 100, 681, 466);
 		pnl = new JPanel();
 		pnl.addMouseListener(new MouseAdapter() {
 			@Override
@@ -138,7 +132,7 @@ public class Catalogo extends JFrame {
 		
 		JPanel panel = new JPanel();
 		panel.setBackground(new Color(128, 128, 255));
-		panel.setBounds(0, 293, 742, 60);
+		panel.setBounds(0, 367, 742, 60);
 		pnl.add(panel);
 		panel.setLayout(null);
 		
@@ -238,7 +232,7 @@ public class Catalogo extends JFrame {
 		btnAdicionar.setToolTipText("Adicionar");
 		btnAdicionar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnAdicionar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF check.png")));
-		btnAdicionar.setBounds(10, 192, 90, 90);
+		btnAdicionar.setBounds(10, 237, 90, 90);
 		pnl.add(btnAdicionar);
 		
 		btnEditar = new JButton("");
@@ -252,7 +246,7 @@ public class Catalogo extends JFrame {
 		btnEditar.setToolTipText("Editar");
 		btnEditar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnEditar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF edit.png")));
-		btnEditar.setBounds(110, 192, 90, 90);
+		btnEditar.setBounds(110, 237, 90, 90);
 		pnl.add(btnEditar);
 		
 		btnDeletar = new JButton("");
@@ -265,7 +259,7 @@ public class Catalogo extends JFrame {
 		btnDeletar.setToolTipText("Deletar");
 		btnDeletar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnDeletar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF delete.png")));
-		btnDeletar.setBounds(210, 192, 90, 90);
+		btnDeletar.setBounds(210, 237, 90, 90);
 		pnl.add(btnDeletar);
 		
 		btnLimpar = new JButton("");
@@ -277,7 +271,7 @@ public class Catalogo extends JFrame {
 		btnLimpar.setToolTipText("Limpar campos");
 		btnLimpar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF change.png")));
 		btnLimpar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
-		btnLimpar.setBounds(310, 192, 90, 90);
+		btnLimpar.setBounds(310, 237, 90, 90);
 		pnl.add(btnLimpar);
 		
 		scrollPaneNomes = new JScrollPane();
@@ -286,7 +280,7 @@ public class Catalogo extends JFrame {
 		scrollPaneNomes.setBounds(10, 111, 289, 82);
 		pnl.add(scrollPaneNomes);
 		
-		listaNomes = new JList();
+		listaNomes = new JList<String>();
 		listaNomes.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
@@ -316,7 +310,9 @@ public class Catalogo extends JFrame {
 		lblFoto.setBounds(410, 11, 229, 242);
 		pnl.add(lblFoto);
 		
-		btnPesquisar = new JButton("");
+		btnPesquisar = new JButton("pesquisar");
+		btnPesquisar.setForeground(new Color(128, 128, 255));
+		btnPesquisar.setFont(new Font("Tahoma", Font.BOLD, 11));
 		btnPesquisar.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
 		btnPesquisar.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -325,8 +321,7 @@ public class Catalogo extends JFrame {
 		});
 		
 		btnPesquisar.setToolTipText("Pesquisar");
-		btnPesquisar.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/CF search.png")));
-		btnPesquisar.setBounds(310, 23, 90, 70);
+		btnPesquisar.setBounds(309, 25, 91, 21);
 		pnl.add(btnPesquisar);
 		
 		btnGerarPdf = new JButton("PDF");
@@ -339,7 +334,7 @@ public class Catalogo extends JFrame {
 				gerarPdf();
 			}
 		});
-		btnGerarPdf.setBounds(310, 111, 90, 70);
+		btnGerarPdf.setBounds(310, 142, 90, 39);
 		pnl.add(btnGerarPdf);
 		
 		JLabel lblNewLabel = new JLabel("*tecle Enter, se nome não cadastrado");
@@ -347,18 +342,30 @@ public class Catalogo extends JFrame {
 		lblNewLabel.setForeground(new Color(255, 0, 0));
 		lblNewLabel.setBounds(59, 69, 232, 14);
 		pnl.add(lblNewLabel);
+		
+		btnSobre = new JButton("Sobre o Catalogo");
+		btnSobre.setBorder(new TitledBorder(null, "", TitledBorder.LEADING, TitledBorder.TOP, null, null));
+		btnSobre.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				Sobre sobre = new Sobre();
+				sobre.setVisible(true);
+			}
+		});
+		btnSobre.setFont(new Font("Tahoma", Font.BOLD, 11));
+		btnSobre.setForeground(new Color(128, 128, 255));
+		btnSobre.setBounds(438, 304, 190, 23);
+		pnl.add(btnSobre);
+		
+		this.setLocationRelativeTo(null);
 	}
 	
-	// Método para verificar o Status de conexão
 	private void statusConn() {
 		try {
 			conn = dao.conectar();
 			
 			if (conn == null) {
-//				System.out.println("Sem conexão");
 				lblStatus.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/dbOff.png")));
 			} else {
-//				System.out.println("Conectado!");
 				lblStatus.setIcon(new ImageIcon(Catalogo.class.getResource("/icons/dbOn.png")));
 			}
 			
@@ -511,8 +518,7 @@ public class Catalogo extends JFrame {
 	}
 	
 	private void listarNomesBanco() {
-		// criando um vetor dinamico
-		DefaultListModel<String> modelo = new DefaultListModel<>();
+		DefaultListModel<String> modelo = new DefaultListModel<>(); // criando um vetor dinamico
 		listaNomes.setModel(modelo);
 		String LerLista = "SELECT * FROM tblUsuarios WHERE nome LIKE '" + txtNome.getText() + "%' ORDER BY nome;";
 		
@@ -534,7 +540,6 @@ public class Catalogo extends JFrame {
 		} catch (Exception e) {
 			System.out.println(e);
 		}
-//		scrollPaneNomes.setVisible(true);
 	}
 	
 	private void preencherPorNomeBanco() {
@@ -573,6 +578,7 @@ public class Catalogo extends JFrame {
 					btnDeletar.setEnabled(true);
 					btnCarregarFoto.setEnabled(true);
 					btnGerarPdf.setEnabled(false);
+					btnPesquisar.setEnabled(false);
 				}
 			} catch (Exception e) {
 				 System.out.println(e);
@@ -616,6 +622,7 @@ public class Catalogo extends JFrame {
 					btnEditar.setEnabled(true);
 					btnDeletar.setEnabled(true);
 					btnGerarPdf.setEnabled(false);
+					btnPesquisar.setEnabled(false);
 			
 				} else {
 					int confirma = JOptionPane.showConfirmDialog(null, "Usuário não encontrado! \nDeseja iniciar novo Cadastro?", "Aviso", JOptionPane.YES_NO_OPTION);
@@ -644,7 +651,6 @@ public class Catalogo extends JFrame {
 	private void gerarPdf() {
 		Document document = new Document(); // importante importar o com.itextpdf.text.Document;
 		
-		//gerar o documento PDF
 		try {
 			PdfWriter.getInstance(document, new FileOutputStream("Catalogo.pdf")); // gera o título do documento PDF
 			document.open(); // abre o documento para que seja incluido o conteudo do PDF (paragrafos, fotos, etc..)
@@ -692,10 +698,8 @@ public class Catalogo extends JFrame {
 		} catch (Exception e) {
 			System.out.println(e);
 		} finally {
-			// Muito importante fechar o documento após gerado o pdf
 			document.close();
 		}
-			// abrir o documento pdf no Leitor padrão do Sistema
 		try {
 			Desktop.getDesktop().open(new File("Catalogo.pdf")); // deve ser o nome do arquivo pdf gerado
 		} catch (Exception e2) {
