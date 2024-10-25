@@ -9,7 +9,7 @@ public class DAO {
 	private String driver = "com.mysql.cj.jdbc.Driver";
 	private String url = "jdbc:mysql://localhost:3306/dbCatalogoFace";
 	private String user = "root";
-	private String password = "";
+	private String password = "apto1001";
 	
 	public Connection conectar() {
 		try {
