@@ -1,7 +1,7 @@
 # Projeto Catalogo Face
 Passivo de instalação em Desktops (Windows, Linux ou MAC), CatalogoFace é um programa de repositório de informações de pessoas com foto associada.
 
-![catalogo](https://github.com/hellysamar/CatalogoFace-em-JAVA/blob/main/Assets/Catalogo1.png)
+![catalogo](https://github.com/hellysamar/CatalogoFace-em-JAVA/blob/main/Assets/catalogo1.png)
 ## Autor
 Hellysamar - Estudo
 ## Instruções para instalação e uso do programa
@@ -47,6 +47,7 @@ CREATE TABLE tblUsuarios (registro INT PRIMARY KEY AUTO_INCREMENT, nome varchar(
 
 ![programa](https://github.com/hellysamar/CatalogoFace-em-JAVA/blob/main/Assets/Catalogo3.png) 
 
+### Modelo Relatório com dados e foto
 ![pdf](https://github.com/hellysamar/CatalogoFace-em-JAVA/blob/main/Assets/Catalogo4.png) 
 
 ### Bibliotecas usadas neste projeto
